@@ -85,7 +85,6 @@ function hc_package_types__fixed_dates__submit(&$form, &$form_state) {
   $package_type = $fields->field_package_type->value();
   $package_dates = $fields->field_package_date->value();
 
-/* TODO: ADD DATE TO LINE ITEM!
 	if ($product_type == 'team_package') {
 	  $line_item_date = $package_dates[$product_package_type]['value'];
     // get line item
@@ -94,7 +93,7 @@ function hc_package_types__fixed_dates__submit(&$form, &$form_state) {
   	$line_item->field_course_line_item_date->set($line_item_date);
   	$line_item->save();
   }
-*/
+
 }
 
 

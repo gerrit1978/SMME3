@@ -119,13 +119,13 @@ function hc_package_types__filled_in_calendar__submit(&$form, &$form_state) {
 	      }
 	    } 
 	  }	  
-/* TODO: ADD DATE TO LINE ITEM!
+
     // get line item
     $line_item = entity_metadata_wrapper('commerce_line_item', $form_state['line_item']);
   
   	$line_item->field_course_line_item_date->set($line_item_date);
   	$line_item->save();
-*/
+
   }
 
 }
