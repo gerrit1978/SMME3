@@ -1,0 +1,186 @@
+<?php
+
+/**
+ * @file
+ *
+ */
+
+/************************************************************************************
+ * Drupal Hook Implementations
+ ***********************************************************************************/
+
+
+/**
+ * Implements hook_init
+ */
+function hc_package_types_init() {
+
+  /* TODO: move this into widget system */
+  drupal_add_library('system', 'ui.datepicker');
+  /* TODO */
+  
+  $widgets = unserialize(variable_get('hc_package_types_widgets', array()));
+  
+  // include widget files
+  foreach ($widgets as $widget) {
+    if (isset($widget['module'])) {
+      $path = drupal_get_path('module', $widget['module']) . '/widgets/';
+      $filename = $widget['module'] . '__' . $widget['name'] . '.widget.inc';
+      if (file_exists($path . $filename)) {
+        require_once($path . $filename);
+      }
+    }
+  }
+  
+  // add JS files if necessary
+  foreach ($widgets as $widget) {
+    $path = drupal_get_path('module', $widget['module']) . '/widgets/';
+    $filename_js = $widget['module'] . '__' . $widget['name'] . '.widget.js';
+    if (file_exists($path . $filename_js)) {
+      drupal_add_js($path . $filename_js);
+    }
+  }
+  
+}
+
+
+/**
+ * Implements hook_menu
+ */
+function hc_package_types_menu() {
+
+  /* CAN BE REMOVED */
+  // admin screen 
+  $items['admin/commerce/config/package'] = array(
+    'title' => 'Package Type settings',
+    'description' => 'Settings for different package types',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('hc_packages_settings_form'),
+    'file' => 'hc_package_types.admin.inc',
+    'access arguments' => array('configure store'),
+  );
+  /* CAN BE REMOVED */
+  
+
+  $widgets = unserialize(variable_get('hc_package_types_widgets', array()));
+  
+  foreach ($widgets as $widget) {
+    $function_menu = $widget['module'] . '__' . $widget['name'] . '__menu';
+    if (function_exists($function_menu)) {
+      $items += $function_menu();
+    }
+  }
+  
+  return $items;
+}
+
+
+
+/**
+ * Implements hook_commerce_cart_product_add()
+ */
+function hc_package_types_commerce_cart_product_add($order, $product, $quantity, $line_item) {
+}
+
+
+/**
+ * Implements hook_form_alter
+ */
+function hc_package_types_form_alter(&$form, &$form_state, $form_id) {
+
+  if (strstr($form_id, 'commerce_cart_add_to_cart_form')) {
+    $widgets = unserialize(variable_get('hc_package_types_widgets', array()));
+    
+    if (isset($form['attributes']['field_package_type'])) {
+      $product_id = $form['product_id']['#value'];
+      $default_product = commerce_product_load($product_id);
+    
+      $fields = entity_metadata_wrapper('commerce_product', $default_product);
+      
+      $package_type = $fields->field_package_type->value();
+    
+      /* Package type = a taxonomy term object, so define a new wrapper for getting the info */
+      $term = entity_metadata_wrapper('taxonomy_term', $package_type);
+      
+      $widget = $term->field_team_package_type_widget->value();
+      
+      /* Render the default element for this widget */
+      $function_default_form_element = $widgets[$widget]['module'] . "__" . $widgets[$widget]['name'] . "__default_form_element";
+      
+      if (function_exists($function_default_form_element)) {
+        $form['product_package_type'] = $function_default_form_element($product_id);
+      }      
+      
+      
+      /* Add widget type to hidden field of this form */
+      $form['widget_type'] = array(
+        '#type' => 'hidden',
+        '#value' => $widgets[$widget]['name'],
+      );
+      
+      
+      /* Add extra validation and/or submit function to the form for this widget */
+      $function_validate = $widgets[$widget]['module'] . "__" . $widgets[$widget]['name'] . "__validate";
+      
+      if (function_exists($function_validate)) {
+        $form['#validate'][] = $function_validate;
+      }
+      
+      $function_submit = $widgets[$widget]['module'] . "__" . $widgets[$widget]['name'] . "__submit";
+      
+      if (function_exists($function_submit)) {
+        $form['#submit'][] = $function_submit;
+      }
+    }
+    
+    // add generic validation and submit functions
+    $form['#validate'][] = '_hc_package_validate';
+    $form['#submit'][] = '_hc_package_submit';
+      
+  }
+}
+
+
+/************************************************************************************
+ * Internal Helper Functions
+ ***********************************************************************************/
+
+/**
+ * Generic validate function for Add to cart form
+ */
+function _hc_package_validate(&$form, &$form_state) {
+  return TRUE;
+}
+
+
+/**
+ * Helper function: extra submit function for package type
+ *
+ */
+function _hc_package_submit(&$form, &$form_state) {
+  $values = $form_state['values'];
+
+  $product_id = $values['product_id'];
+  $product = commerce_product_load($product_id);
+  
+  $product_type = $product->type;
+
+  // for individual packages
+	if ($product_type == 'individual_package') {
+//	  $date = $fields->field_session_dates->value();
+
+    $date_field = field_get_items('commerce_product', $product, 'field_session_dates');
+    $date = $date_field[0];
+
+	  $line_item_date = $date['value'];
+	  $line_item_time = strtotime($line_item_date);
+
+
+    // get line item
+    $line_item = entity_metadata_wrapper('commerce_line_item', $form_state['line_item']);
+  
+  	$line_item->field_course_line_item_date->set($line_item_date);
+  	$line_item->save();
+
+	}
+}

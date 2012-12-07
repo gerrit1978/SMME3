@@ -1,0 +1,16 @@
+***************
+*** 232,237 ****
+    // Add entity type specific settings if they exist.
+    $settings_form = $controller->settingsForm($field, $instance);
+    if (!empty($settings_form)) {
+      $element['type_settings'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Inline Entity Form: %type', array('%type' => $entity_info['label'])),
+--- 232,238 ----
+    // Add entity type specific settings if they exist.
+    $settings_form = $controller->settingsForm($field, $instance);
+    if (!empty($settings_form)) {
++     $entity_info = entity_get_info($controller->entityType);
+      $element['type_settings'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Inline Entity Form: %type', array('%type' => $entity_info['label'])),
