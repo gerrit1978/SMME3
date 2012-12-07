@@ -1,0 +1,5 @@
+name         = SMME Courses
+description  = Provides course-related functionality, incl. a number of product "catalog" views
+core         = 7.x
+version      = 7.x-1.0
+package      = HedgeComm
