@@ -2,16 +2,11 @@
 function hc_hosting_default_rules_configuration() {
   $configs = array();
 
-  $rule = '{ "rules_smme_hosting" : {
+  $rule = '{ "hc_smme_hosting" : {
     "LABEL" : "SMME Hosting",
     "PLUGIN" : "reaction rule",
-    "REQUIRES" : [
-      "rules",
-      "hc_hosting",
-      "commerce_line_item",
-      "commerce_product_reference"
-    ],
-    "ON" : [ "commerce_product_calculate_sell_price" ],
+    "REQUIRES" : [ "rules", "hc_hosting", "commerce_cart" ],
+    "ON" : [ "commerce_cart_product_add" ],
     "IF" : [
       { "entity_has_field" : {
           "entity" : [ "commerce-line-item" ],
@@ -26,11 +21,14 @@ function hc_hosting_default_rules_configuration() {
       { "hc_hosting_fee" : { "commerce_line_item" : [ "commerce_line_item" ] } }
     ],
     "DO" : [
-      { "commerce_line_item_unit_price_add" : {
-          "commerce_line_item" : [ "commerce_line_item" ],
-          "amount" : "99500",
-          "component_name" : "base_price",
-          "round_mode" : "1"
+      { "commerce_cart_product_add_by_sku" : {
+          "USING" : {
+            "user" : [ "site:current-cart-order:owner" ],
+            "sku" : "HOSTING-US",
+            "quantity" : "1",
+            "combine" : 0
+          },
+          "PROVIDE" : { "product_add_line_item" : { "product_add_line_item" : "Added product line item" } }
         }
       }
     ]
@@ -38,6 +36,39 @@ function hc_hosting_default_rules_configuration() {
 }';
 
   $configs['hc_smme_hosting'] = rules_import($rule);
+  
+  
+  $rule = '{ "hc_smme_hosting_fixed_in_cart" : {
+    "LABEL" : "SMME Hosting Fixed in Cart",
+    "PLUGIN" : "reaction rule",
+    "REQUIRES" : [ "rules", "commerce_cart" ],
+    "ON" : [ "commerce_cart_product_remove" ],
+    "IF" : [
+      { "data_is" : { "data" : [ "commerce-product:sku" ], "value" : "HOSTING-US" } }
+    ],
+    "DO" : [
+      { "commerce_cart_product_add_by_sku" : {
+          "USING" : {
+            "user" : [ "site:current-cart-order:owner" ],
+            "sku" : "HOSTING-US",
+            "quantity" : "1",
+            "combine" : 0
+          },
+          "PROVIDE" : { "product_add_line_item" : { "product_add_line_item" : "Added product line item" } }
+        }
+      },
+      { "drupal_message" : {
+          "message" : "This line item cannot be removed from your cart.",
+          "type" : "warning"
+        }
+      }
+    ]
+  }
+}';
+  
+  
+  $configs['hc_smme_hosting_fixed_in_cart'] = rules_import($rule);
+  
   return $configs;
 }
 
