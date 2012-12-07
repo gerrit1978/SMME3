@@ -167,10 +167,13 @@ function _hc_package_submit(&$form, &$form_state) {
 
   // for individual packages
 	if ($product_type == 'individual_package') {
+
 //	  $date = $fields->field_session_dates->value();
 
     $date_field = field_get_items('commerce_product', $product, 'field_session_dates');
+    
     $date = $date_field[0];
+
 
 	  $line_item_date = $date['value'];
 	  $line_item_time = strtotime($line_item_date);
