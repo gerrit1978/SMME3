@@ -1,0 +1,7 @@
+name = Menus
+description = Provides a Kickstart-specific administration menu - altered by HedgeComm
+core = 7.x
+package = HedgeComm
+dependencies[] = toolbar_megamenu
+
+stylesheets[all][] = hc_menus.css

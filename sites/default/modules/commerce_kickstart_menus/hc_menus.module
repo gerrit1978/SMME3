@@ -3,7 +3,7 @@
 /**
  * Implements hook_menu().
  */
-function commerce_kickstart_menus_menu() {
+function hc_menus_menu() {
   // Site settings
   $items['admin/site-config'] = array(
     'title' => 'Site settings',
@@ -20,8 +20,8 @@ function commerce_kickstart_menus_menu() {
   );
   // Products
   $items['admin/commerce/manage-products'] = array(
-    'title' => 'Products',
-    'description' => 'Manage products.',
+    'title' => 'Courses',
+    'description' => 'Manage courses.',
     'page callback' => 'drupal_goto',
     'page arguments' => array('admin/commerce/products'),
     'access arguments' => array('access administration pages'),
@@ -253,7 +253,7 @@ function commerce_kickstart_menus_menu() {
 /**
  * Implements hook_menu_alter().
  */
-function commerce_kickstart_menus_menu_alter(&$items) {
+function hc_menus_menu_alter(&$items) {
   // Move the pages under the "Getting Started" entry.
   foreach (array('admin/help/getting-started', 'admin/help/first-steps', 'admin/demo') as $path) {
     if (isset($items[$path])) {
@@ -268,14 +268,14 @@ function commerce_kickstart_menus_menu_alter(&$items) {
   // Products > Manage products
   if (isset($items['admin/commerce/products'])) {
     $items['admin/commerce/products']['parent'] = 'admin/commerce/manage-products/actions';
-    $items['admin/commerce/products']['title'] = 'Manage products';
+    $items['admin/commerce/products']['title'] = 'Manage courses';
     $items['admin/commerce/products']['weight'] = -30;
     $items['admin/commerce/products']['type'] = MENU_NORMAL_ITEM;
   }
   // Products > Add a product
   if (isset($items['node/add/add-product'])) {
     $items['node/add/add-product']['parent'] = 'admin/commerce/manage-products/actions';
-    $items['node/add/add-product']['title'] = 'Add a product';
+    $items['node/add/add-product']['title'] = 'Add a course';
     $items['node/add/add-product']['type'] |= MENU_NORMAL_ITEM;
   }
   // Orders > Manage orders
@@ -399,7 +399,7 @@ function commerce_kickstart_menus_menu_alter(&$items) {
  *
  * Alter the page title on the Jirafe dashboard page.
  */
-function commerce_kickstart_menus_init() {
+function hc_menus_init() {
   $item = menu_get_item();
   if ($item['path'] != 'admin/commerce/jirafe') {
     return;
@@ -414,14 +414,14 @@ function commerce_kickstart_menus_init() {
  * Apply some link configuration stored in the router during the menu
  * rebuild process.
  */
-function commerce_kickstart_menus_menu_link_alter(&$link) {
+function hc_menus_menu_link_alter(&$link) {
   // Check if the item belongs to a shortcut menu.
   if (module_exists('shortcut') && shortcut_set_load($link['menu_name'])) {
     // Don't change the plid of shortcut menu items.
     return;
   }
 
-  $item = _commerce_kickstart_menu_find_router($link['link_path']);
+  $item = _hc_menu_find_router($link['link_path']);
   if ($item && isset($item['options'])) {
     if (!isset($link['options'])) {
       $link['options'] = array();
@@ -436,7 +436,7 @@ function commerce_kickstart_menus_menu_link_alter(&$link) {
   }
 }
 
-function _commerce_kickstart_menu_find_router($link_path) {
+function _hc_menu_find_router($link_path) {
   $router = menu_get_router();
   $parts = explode('/', $link_path, MENU_MAX_PARTS);
 
@@ -456,29 +456,29 @@ function _commerce_kickstart_menu_find_router($link_path) {
 /**
  * Implements hook_module_implements_alter().
  */
-function commerce_kickstart_menus_module_implements_alter(&$implementations, $hook) {
+function hc_menus_module_implements_alter(&$implementations, $hook) {
   if (in_array($hook, array('menu_alter'))) {
     // Move our hook implementation to the bottom.
-    $group = $implementations['commerce_kickstart_menus'];
-    unset($implementations['commerce_kickstart_menus']);
-    $implementations['commerce_kickstart_menus'] = $group;
+    $group = $implementations['hc_menus'];
+    unset($implementations['hc_menus']);
+    $implementations['hc_menus'] = $group;
   }
 }
 
 /**
  * Implements hook_views_api().
  */
-function commerce_kickstart_menus_views_api() {
+function hc_menus_views_api() {
   return array(
     'api' => 3,
-    'path' => drupal_get_path('module', 'commerce_kickstart_menus') . '/views',
+    'path' => drupal_get_path('module', 'hc_menus') . '/views',
   );
 }
 
 /**
  * Implements hook_menu_breadcrumb_alter().
  */
-function commerce_kickstart_menus_menu_breadcrumb_alter(&$active_trail, $item) {
+function hc_menus_menu_breadcrumb_alter(&$active_trail, $item) {
   // Home > Administration > Content > Settings > Content types
   if (drupal_match_path($item['path'], "admin/structure/types") || drupal_match_path($item['path'], "admin/structure/types/*")) {
     if (drupal_match_path($item['path'], "admin/structure/types/add")) {
@@ -486,19 +486,19 @@ function commerce_kickstart_menus_menu_breadcrumb_alter(&$active_trail, $item) {
     }
     $active_trail_end = array_slice($active_trail, 6);
     $active_trail = array_slice($active_trail, 0, 1);
-    $active_trail[] = _commerce_kickstart_menus_get_item('admin');
-    $active_trail[] = _commerce_kickstart_menus_get_item('admin/commerce/manage-content');
-    $active_trail[] = _commerce_kickstart_menus_get_item('admin/commerce/manage-content/settings');
-    $active_trail[] = _commerce_kickstart_menus_get_item('admin/commerce/manage-content/settings/content-types');
+    $active_trail[] = _hc_menus_get_item('admin');
+    $active_trail[] = _hc_menus_get_item('admin/commerce/manage-content');
+    $active_trail[] = _hc_menus_get_item('admin/commerce/manage-content/settings');
+    $active_trail[] = _hc_menus_get_item('admin/commerce/manage-content/settings/content-types');
     $active_trail = array_merge($active_trail, $active_trail_end);
   }
   // Set the breadcrumb for the "Add content" tab of node/add.
   else if (drupal_match_path($item['path'], 'node/add')) {
     $active_trail = array_slice($active_trail, 0, 1);
-    $active_trail[] = _commerce_kickstart_menus_get_item('admin');
-    $active_trail[] = _commerce_kickstart_menus_get_item('admin/commerce/manage-content');
-    $active_trail[] = _commerce_kickstart_menus_get_item('admin/commerce/manage-content/actions');
-    $active_trail[] = _commerce_kickstart_menus_get_item('node/add/add-content');
+    $active_trail[] = _hc_menus_get_item('admin');
+    $active_trail[] = _hc_menus_get_item('admin/commerce/manage-content');
+    $active_trail[] = _hc_menus_get_item('admin/commerce/manage-content/actions');
+    $active_trail[] = _hc_menus_get_item('node/add/add-content');
   }
 }
 
@@ -515,7 +515,7 @@ function commerce_kickstart_menus_menu_breadcrumb_alter(&$active_trail, $item) {
  *   The loaded router item, with additional keys set if the Crumbs module is
  *   present.
  */
-function _commerce_kickstart_menus_get_item($path) {
+function _hc_menus_get_item($path) {
   if (module_exists('crumbs')) {
     static $loaded = FALSE;
     if (!$loaded) {
