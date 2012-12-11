@@ -20,6 +20,18 @@ function hc_coupon_rules_condition_info() {
       ),
       'module' => 'hc_coupon',
     ),
+    'hc_coupon_fixed_coupon_region_is_valid' => array(
+      'group' => 'HC Coupons',
+      'label' => t('Region for fixed coupon is valid'),
+      'arguments' => array(
+        'commerce_coupon' => array(
+          'type' => 'commerce_coupon',
+          'label' => t('coupon'),
+        ),
+      ),
+      'module' => 'hc_coupon',
+    ),
+    
   );
 }
 
@@ -27,7 +39,7 @@ function hc_coupon_rules_condition_info() {
 
 
 /**
- * Callback function for rules condition
+ * Callback function for rules condition: PCT coupon
  */
 function hc_coupon_coupon_region_is_valid($commerce_line_item, $commerce_coupon) {
 
@@ -59,4 +71,25 @@ function hc_coupon_coupon_region_is_valid($commerce_line_item, $commerce_coupon)
     return FALSE;
   }
 
+}
+
+
+/**
+ * Callback function for rules condition: FIXED coupon
+ */
+function hc_coupon_fixed_coupon_region_is_valid($commerce_coupon) {
+
+  // coupon region
+  $fields_coupon = entity_metadata_wrapper('commerce_coupon', $commerce_coupon);
+  $coupon_region = $fields_coupon->field_course_region->value();
+
+  // user region
+  $user_location = $_SESSION['user_location'];
+  $continent_code = $user_location['continent_code'];
+  
+  if ($continent_code == $coupon_region) {
+    return TRUE;
+  } else {
+    return FALSE;
+  }
 }
